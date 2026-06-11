@@ -1,0 +1,38 @@
+include:
+  - {
+      type: yaml,
+      behavior: domain,
+      url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geosite/proxy.yaml,
+    }
+
+payload:
+  - DOMAIN,firpe.cn
+  - DOMAIN,arthurchiao.art
+  - DOMAIN,su.anywayfosec.xyz
+  - DOMAIN,999.ts1110.top
+  - DOMAIN,cdn.ramenpay.net
+  - DOMAIN,cdn.xiaolincoding.com
+  - DOMAIN,linuxmirrors.cn
+  - DOMAIN,dash.plotly.com
+  - DOMAIN,plotly.com
+  - DOMAIN,plotly.github.io
+  - DOMAIN,community.plotly.com
+  - DOMAIN,www.drawio.com
+  - DOMAIN,app.diagrams.net
+  - DOMAIN,media.inkscape.org
+  - DOMAIN,inkscape.org
+  - DOMAIN-SUFFIX,codeium.com
+  - DOMAIN-SUFFIX,dimensions.ai
+  - DOMAIN-SUFFIX,readcube.com
+  - DOMAIN-SUFFIX,prismic.io
+  - DOMAIN-SUFFIX,windsurf.com
+  - DOMAIN-SUFFIX,taishan2025.icu
+  - DOMAIN-SUFFIX,taishan.pro
+  - DOMAIN-SUFFIX,haita.io
+  - DOMAIN-SUFFIX,haita.org
+  - DOMAIN-SUFFIX,joinhaita.com
+  - DOMAIN-SUFFIX,eehk.net
+  - DOMAIN-SUFFIX,subxiandan.top
+  - DOMAIN-SUFFIX,itzmx.com
+  - DOMAIN-SUFFIX,figshare.com
+  - DOMAIN-SUFFIX,hotpe.top

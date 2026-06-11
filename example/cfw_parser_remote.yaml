@@ -1,0 +1,5 @@
+parsers:
+  - url: https://example.com/profile.yaml
+    remote:
+      url: https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/cfw.js.js
+      cache: true

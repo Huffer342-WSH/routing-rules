@@ -1,0 +1,2 @@
+- 覆写脚本  <https://raw.githubusercontent.com/Huffer342-WSH/CFW-parsers/refs/heads/main/clash-party.js>
+- 规则: <https://github.com/Huffer342-WSH/CFW-parsers/tree/rules>

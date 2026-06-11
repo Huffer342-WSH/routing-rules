@@ -1,0 +1,18 @@
+[project]
+name = "cfw-parsers"
+version = "0.1.0"
+description = "Clash for Party 配置文件解析和规则合并工具"
+readme = "README.md"
+requires-python = ">=3.8.1"
+
+license = { text = "MIT" }
+
+dependencies = [
+    "PyYAML>=6.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "dnspython>=2.6.1",
+]

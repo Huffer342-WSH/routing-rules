@@ -1,0 +1,68 @@
+name: Publish rules
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv sync
+
+      - name: Prepare publish directory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf publish-rules
+          mkdir -p publish-rules
+
+          if [ -d rules ]; then
+            cp -a rules/. publish-rules/
+          fi
+
+      - name: Generate custom rules
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for file in custom/*.yaml; do
+            name="$(basename "$file")"
+            uv run python scripts/merge_rules.py "$file" -o "publish-rules/$name"
+          done
+
+      - name: Publish to rules branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd publish-rules
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b rules
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No files to publish."
+            exit 0
+          fi
+
+          git commit -m "Publish rules"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin rules
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
