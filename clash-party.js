@@ -109,14 +109,14 @@ function main(config) {
     /**
      * 创建标准化的国家/地区代理组
      * @param {string[]} proxiesList 所有可用节点名称
-     * @param {object} matcher 配置项 { name, emoji, match }
+     * @param {object} matcher 配置项 { name, emoji, match: RegExp[] }
      */
     function createProxyGroups(proxiesList, matcher) {
-        const { name, emoji, match: keywords } = matcher;
+        const { name, emoji, match: patterns } = matcher;
 
         // 筛选节点：只要包含 match 中的任意一个关键字
         const matchedProxies = proxiesList.filter(pName =>
-            keywords.some(key => pName.includes(key))
+            patterns.some(pattern => pattern.test(pName))
         );
 
         // 如果该地区没有匹配到节点，直接返回 null
@@ -158,24 +158,25 @@ function main(config) {
     const proxyNameUseful = proxyNameRAW.filter(n => !/剩余|套餐|网址|客服|过滤|时间|境外/.test(n));
     const proxyNameAuto = filterHighMultiplierNodes(proxyNameUseful);
 
-    // 定义匹配规则：name(核心名), emoji(旗帜), match(匹配关键字)
+    // 定义匹配规则：name(核心名), emoji(旗帜), match(匹配正则)
+    // 连续大写英文缩写需匹配完整片段，避免 US 误命中 AUS。
     const proxyMatcher = [
-        { name: '美国', emoji: '🇺🇸', match: ['美国', 'US', 'States', '🇺🇸'] },
-        { name: '香港', emoji: '🇭🇰', match: ['香港', 'HK', 'Hong', '🇭🇰'] },
-        { name: '台湾', emoji: '🇹🇼', match: ['台湾', 'TW', 'Tai', '🇹🇼'] },
-        { name: '日本', emoji: '🇯🇵', match: ['日本', 'JP', 'Japan', '🇯🇵'] },
-        { name: '新加坡', emoji: '🇸🇬', match: ['新加坡', 'SG', 'Singapore', '🇸🇬'] },
-        { name: '韩国', emoji: '🇰🇷', match: ['韩国', 'KR', 'Korea', '🇰🇷'] },
-        { name: '英国', emoji: '🇬🇧', match: ['英国', 'UK', 'Kingdom', '🇬🇧'] },
-        { name: '法国', emoji: '🇫🇷', match: ['法国', 'FR', 'France', '🇫🇷'] },
-        { name: '德国', emoji: '🇩🇪', match: ['德国', 'DE', 'Germany', '🇩🇪'] },
-        { name: '澳大利亚', emoji: '🇦🇺', match: ['澳大利亚', 'AU', 'Australia', '🇦🇺'] },
-        { name: '加拿大', emoji: '🇨🇦', match: ['加拿大', 'CA', 'Canada', '🇨🇦'] },
-        { name: '土耳其', emoji: '🇹🇷', match: ['土耳其', 'TR', 'Turkey', '🇹🇷'] },
-        { name: '阿根廷', emoji: '🇦🇷', match: ['阿根廷', 'AR', 'Argentina', '🇦🇷'] },
-        { name: '印度', emoji: '🇮🇳', match: ['印度', 'IN', 'India', '🇮🇳'] },
-        { name: '越南', emoji: '🇻🇳', match: ['越南', 'VN', 'Vietnam', '🇻🇳'] },
-        { name: '俄罗斯', emoji: '🇷🇺', match: ['俄罗斯', 'RU', 'Russia', '🇷🇺'] },
+        { name: '美国', emoji: '🇺🇸', match: [/美国/, /(^|[^A-Z])US(?=$|[^A-Z])/, /States/, /🇺🇸/] },
+        { name: '香港', emoji: '🇭🇰', match: [/香港/, /(^|[^A-Z])HK(?=$|[^A-Z])/, /Hong/, /🇭🇰/] },
+        { name: '台湾', emoji: '🇹🇼', match: [/台湾/, /(^|[^A-Z])TW(?=$|[^A-Z])/, /Tai/, /🇹🇼/] },
+        { name: '日本', emoji: '🇯🇵', match: [/日本/, /(^|[^A-Z])JP(?=$|[^A-Z])/, /Japan/, /🇯🇵/] },
+        { name: '新加坡', emoji: '🇸🇬', match: [/新加坡/, /(^|[^A-Z])SG(?=$|[^A-Z])/, /Singapore/, /🇸🇬/] },
+        { name: '韩国', emoji: '🇰🇷', match: [/韩国/, /(^|[^A-Z])KR(?=$|[^A-Z])/, /Korea/, /🇰🇷/] },
+        { name: '英国', emoji: '🇬🇧', match: [/英国/, /(^|[^A-Z])UK(?=$|[^A-Z])/, /Kingdom/, /🇬🇧/] },
+        { name: '法国', emoji: '🇫🇷', match: [/法国/, /(^|[^A-Z])FR(?=$|[^A-Z])/, /France/, /🇫🇷/] },
+        { name: '德国', emoji: '🇩🇪', match: [/德国/, /(^|[^A-Z])DE(?=$|[^A-Z])/, /Germany/, /🇩🇪/] },
+        { name: '澳大利亚', emoji: '🇦🇺', match: [/澳大利亚/, /(^|[^A-Z])AU(?=$|[^A-Z])/, /Australia/, /🇦🇺/] },
+        { name: '加拿大', emoji: '🇨🇦', match: [/加拿大/, /(^|[^A-Z])CA(?=$|[^A-Z])/, /Canada/, /🇨🇦/] },
+        { name: '土耳其', emoji: '🇹🇷', match: [/土耳其/, /(^|[^A-Z])TR(?=$|[^A-Z])/, /Turkey/, /🇹🇷/] },
+        { name: '阿根廷', emoji: '🇦🇷', match: [/阿根廷/, /(^|[^A-Z])AR(?=$|[^A-Z])/, /Argentina/, /🇦🇷/] },
+        { name: '印度', emoji: '🇮🇳', match: [/印度/, /(^|[^A-Z])IN(?=$|[^A-Z])/, /India/, /🇮🇳/] },
+        { name: '越南', emoji: '🇻🇳', match: [/越南/, /(^|[^A-Z])VN(?=$|[^A-Z])/, /Vietnam/, /🇻🇳/] },
+        { name: '俄罗斯', emoji: '🇷🇺', match: [/俄罗斯/, /(^|[^A-Z])RU(?=$|[^A-Z])/, /Russia/, /🇷🇺/] },
     ];
 
     // 定义 AI 支持的地区白名单 (必须与 proxyMatcher 中的 name 一致)
@@ -224,8 +225,8 @@ function main(config) {
 
     // 常规节点组
     const proxyNameCommon = [
-        'DIRECT',
         '默认代理',
+        'DIRECT',
         '自动选择',
         '负载均衡-轮询',
         '负载均衡-一致性哈希',
