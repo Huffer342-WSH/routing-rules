@@ -242,55 +242,49 @@ function main(config) {
     const proxyGroupStream = [
         {
             name: '默认代理',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Default.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Default.png',
             type: 'select',
             proxies: ['自动选择', 'DIRECT', '负载均衡-轮询', '负载均衡-一致性哈希', ...proxyNameCountries, ...proxyNameRAW]
         },
         {
             name: 'AI',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/OpenAI.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/OpenAI.png',
             type: 'select',
             proxies: proxyNameAI
         },
-        // {
-        //     name: 'Gemini',
-        //     icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Gemini.png',
-        //     type: 'select',
-        //     proxies: proxyNameAI
-        // },
         {
             name: 'Microsoft Copilot',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Microsoft%20Copilot.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft%20Copilot.png',
             type: 'select',
             proxies: proxyNameCommon
         },
         {
             name: '战网',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Battle.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Battle.png',
             type: 'select',
             proxies: proxyNameCommon
         },
         {
             name: 'Telegram',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Telegram.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Telegram.png',
             type: 'select',
             proxies: proxyNameCommon
         },
         {
             name: '苹果服务',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Apple.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Apple.png',
             type: 'select',
             proxies: proxyNameCommon
         },
         {
             name: '微软服务 - CN',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Microsoft.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft.png',
             type: 'select',
             proxies: proxyNameCommon
         },
         {
             name: '微软服务',
-            icon: 'https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/icon/Microsoft.png',
+            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft.png',
             type: 'select',
             proxies: proxyNameCommon
         },
@@ -365,7 +359,7 @@ function main(config) {
             type: 'http',
             format: 'yaml',
             behavior: 'classical',
-            url: 'https://raw.githubusercontent.com/Huffer342-WSH/CFW-parsers/refs/heads/rules/proxy.yaml',
+            url: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/proxy.yaml',
             interval: rulesetUpdateInterval
         },
         'direct': {
@@ -384,14 +378,14 @@ function main(config) {
             type: 'http',
             behavior: 'classical',
             format: 'yaml',
-            url: "https://cdn.jsdelivr.net/gh/Huffer342-WSH/Clash-for-Windwos-parsers@main/rules/anthropic.yaml",
+            url: "https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/anthropic.yaml",
             interval: rulesetUpdateInterval
         },
         'AI': {
             type: 'http',
             behavior: 'classical',
             format: 'yaml',
-            url: "https://raw.githubusercontent.com/Huffer342-WSH/CFW-parsers/refs/heads/rules/category-ai-chat-!cn.yaml",
+            url: "https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/category-ai-chat-!cn.yaml",
             interval: rulesetUpdateInterval
         }
     };
