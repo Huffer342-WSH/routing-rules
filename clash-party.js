@@ -90,15 +90,29 @@ function main(config) {
     };
 
     // ===================================
-    //  分类国家节点组 - 辅助函数
+    // 节点组配置
     // ===================================
 
+    const ICON_BASE = 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon';
+    const INVALID_NODE_PATTERN = /剩余|套餐|网址|客服|过滤|时间|境外/;
+    const AI_REGION_NAMES = ['美国', '日本', '新加坡', '台湾', '英国', '韩国', '法国', '德国'];
+    const SERVICE_GROUP_META_LIST = [
+        ['Microsoft Copilot', 'Microsoft%20Copilot.png'],
+        ['战网', 'Battle.png'],
+        ['Telegram', 'Telegram.png'],
+        ['苹果服务', 'Apple.png'],
+        ['微软服务 - CN', 'Microsoft.png'],
+        ['微软服务', 'Microsoft.png'],
+    ];
+
     /**
-     * 过滤掉高倍率节点（>1倍），保留平价节点
+     * 从“节点名数组”中过滤高倍率节点，返回仍可用于自动测速的节点名数组。
+     * @param {string[]} proxyNodeNames 节点名字数组
+     * @returns {string[]} 节点名字数组
      */
-    function filterHighMultiplierNodes(proxyNames) {
+    function filterHighMultiplierNodes(proxyNodeNames) {
         const regex = /(\d+\.?\d*)\s*[倍xX]|[倍xX]\s*(\d+\.?\d*)/;
-        return proxyNames.filter(name => {
+        return proxyNodeNames.filter(name => {
             const match = name.match(regex);
             if (!match) return true;
             const num = parseFloat(match[1] || match[2]);
@@ -107,60 +121,91 @@ function main(config) {
     }
 
     /**
-     * 创建标准化的国家/地区代理组
-     * @param {string[]} proxiesList 所有可用节点名称
-     * @param {object} matcher 配置项 { name, emoji, match: RegExp[] }
+     * 创建一个 select 类型的“节点组元素”。
+     * @param {string} groupName 节点组名字
+     * @param {string[]} proxyOptionNames 节点组候选项名字数组，可包含节点名、节点组名和 DIRECT
+     * @param {string} [iconUrl] 图标地址
+     * @returns {object} 节点组元素
      */
-    function createProxyGroups(proxiesList, matcher) {
-        const { name, emoji, match: patterns } = matcher;
-
-        // 筛选节点：只要包含 match 中的任意一个关键字
-        const matchedProxies = proxiesList.filter(pName =>
-            patterns.some(pattern => pattern.test(pName))
-        );
-
-        // 如果该地区没有匹配到节点，直接返回 null
-        if (matchedProxies.length === 0) return null;
-
-        // 定义组名称格式
-        const manualGroupName = `节点组-${emoji}${name}`;          // 例: 节点组-🇺🇸美国
-        const autoGroupName = `♻️${emoji}${name}-自动选择`;   // 例: ♻️🇺🇸美国-自动选择
-
-        // 1. 自动选择组 (Url-Test) - 仅使用低倍率节点
-        const autoGroup = {
-            name: autoGroupName,
-            type: 'url-test',
-            proxies: filterHighMultiplierNodes(matchedProxies),
-            url: netTestUrl,
-            interval: 300,
-            tolerance: 50
-        };
-
-        // 2. 手动选择组 (Select) - 包含自动组 + 所有匹配节点
-        const manualGroup = {
-            name: manualGroupName,
-            type: 'select',
-            proxies: [autoGroupName, ...matchedProxies]
-        };
-
+    function createSelectGroupItem(groupName, proxyOptionNames, iconUrl) {
         return {
-            autoGroup,     // 代理组配置对象
-            manualGroup,   // 代理组配置对象
+            name: groupName,
+            ...(iconUrl ? { icon: iconUrl } : {}),
+            type: 'select',
+            proxies: proxyOptionNames,
         };
     }
 
-    // ===================================
-    //  分类国家节点组 - 配置定义
-    // ===================================
+    /**
+     * 创建一个 url-test 类型的“节点组元素”。
+     * @param {string} groupName 节点组名字
+     * @param {string[]} proxyNodeNames 参与测速的节点名字数组
+     * @param {object} [options] 覆盖默认测速参数
+     * @returns {object} 节点组元素
+     */
+    function createUrlTestGroupItem(groupName, proxyNodeNames, options = {}) {
+        return {
+            name: groupName,
+            type: 'url-test',
+            proxies: proxyNodeNames,
+            url: netTestUrl,
+            interval: autoSelectInterval,
+            ...options,
+        };
+    }
 
-    // 获取所有节点名称并过滤无效节点
-    const proxyNameRAW = (config.proxies || []).map(p => p.name);
-    const proxyNameUseful = proxyNameRAW.filter(n => !/剩余|套餐|网址|客服|过滤|时间|境外/.test(n));
-    const proxyNameAuto = filterHighMultiplierNodes(proxyNameUseful);
+    /**
+     * 创建一个 load-balance 类型的“节点组元素”。
+     * @param {string} groupName 节点组名字
+     * @param {string[]} proxyNodeNames 参与负载均衡的节点名字数组
+     * @param {string} strategy 负载均衡策略
+     * @returns {object} 节点组元素
+     */
+    function createLoadBalanceGroupItem(groupName, proxyNodeNames, strategy) {
+        return {
+            name: groupName,
+            type: 'load-balance',
+            proxies: proxyNodeNames,
+            url: netTestUrl,
+            interval: autoSelectInterval,
+            strategy,
+            lazy: true,
+        };
+    }
 
-    // 定义匹配规则：name(核心名), emoji(旗帜), match(匹配正则)
-    // 连续大写英文缩写需匹配完整片段，避免 US 误命中 AUS。
-    const proxyMatcher = [
+    /**
+     * 根据地区规则创建一组地区节点组元素：手动选择组 + 自动测速组。
+     * @param {string[]} usableProxyNodeNames 可用节点名字数组
+     * @param {object} regionMatcher 地区匹配规则
+     * @returns {object|null} 地区节点组结果，包含两个节点组元素
+     */
+    function createRegionGroupItems(usableProxyNodeNames, regionMatcher) {
+        const matchedProxyNodeNames = usableProxyNodeNames.filter(proxyNodeName =>
+            regionMatcher.match.some(pattern => pattern.test(proxyNodeName))
+        );
+
+        if (matchedProxyNodeNames.length === 0) return null;
+
+        const regionSelectGroupName = `节点组-${regionMatcher.emoji}${regionMatcher.name}`;
+        const regionAutoGroupName = `♻️${regionMatcher.emoji}${regionMatcher.name}-自动选择`;
+        const regionProxyOptionNames = [regionAutoGroupName, ...matchedProxyNodeNames];
+
+        return {
+            regionName: regionMatcher.name,
+            autoGroupItem: createUrlTestGroupItem(
+                regionAutoGroupName,
+                filterHighMultiplierNodes(matchedProxyNodeNames),
+                { interval: 300, tolerance: 50 }
+            ),
+            selectGroupItem: createSelectGroupItem(
+                regionSelectGroupName,
+                regionProxyOptionNames
+            ),
+        };
+    }
+
+    // 地区识别规则。英文缩写按完整片段匹配，避免 US 误命中 AUS。
+    const regionMatchers = [
         { name: '美国', emoji: '🇺🇸', match: [/美国/, /(^|[^A-Z])US(?=$|[^A-Z])/, /States/, /🇺🇸/] },
         { name: '香港', emoji: '🇭🇰', match: [/香港/, /(^|[^A-Z])HK(?=$|[^A-Z])/, /Hong/, /🇭🇰/] },
         { name: '台湾', emoji: '🇹🇼', match: [/台湾/, /(^|[^A-Z])TW(?=$|[^A-Z])/, /Tai/, /🇹🇼/] },
@@ -179,169 +224,89 @@ function main(config) {
         { name: '俄罗斯', emoji: '🇷🇺', match: [/俄罗斯/, /(^|[^A-Z])RU(?=$|[^A-Z])/, /Russia/, /🇷🇺/] },
     ];
 
-    // 定义 AI 支持的地区白名单 (必须与 proxyMatcher 中的 name 一致)
-    // 逻辑：只有这些地区的“自动选择”组会被加入 AI 策略
-    const aiSupportedNames = ['美国', '日本', '新加坡', '台湾', '英国', '韩国', '法国', '德国'];
-
     // ===================================
-    //  分类国家节点组 - 执行
+    // 节点组生成
     // ===================================
 
-    const proxyGroupAuto = [];
-    const proxyGroupManual = [];
+    // NodeNames: 真实节点的 name 字段数组。
+    const rawProxyNodeNames = (config.proxies || []).map(proxy => proxy.name);
+    const usableProxyNodeNames = rawProxyNodeNames.filter(name => !INVALID_NODE_PATTERN.test(name));
+    const autoTestProxyNodeNames = filterHighMultiplierNodes(usableProxyNodeNames);
 
-    const proxyNameCountries = [];      // 存放所有国家的手动组名称
-    const proxyNameAIAuto = [];         // 存放 AI 专用的节点，包含适用于AI的节点
-    const proxyNameAI = ['自动选择-AI']; // 给Gemini等使用，包含：'自动选择-AI', 适用于AI的国家组, 适用于AI的节点
+    // GroupItems: 完整节点组对象数组，会写入 config['proxy-groups']。
+    const autoProxyGroupItems = [];
+    const regionSelectGroupItems = [];
+    const serviceProxyGroupItems = [];
 
-    // 遍历匹配规则生成组
-    proxyMatcher.forEach(matcher => {
-        const result = createProxyGroups(proxyNameUseful, matcher);
+    // GroupNames: 节点组名字数组；OptionNames: Clash proxies 候选项名字数组。
+    const regionSelectGroupNames = [];
+    const aiAutoProxyNodeNames = [];
+    const aiProxyOptionNames = ['自动选择-AI'];
 
-        if (result) {
-            const { autoGroup, manualGroup } = result;
+    regionMatchers.forEach(regionMatcher => {
+        const regionGroupItems = createRegionGroupItems(usableProxyNodeNames, regionMatcher);
+        if (!regionGroupItems) return;
 
-            // 1. 添加生成的组对象到列表
-            proxyGroupAuto.push(autoGroup);
-            proxyGroupManual.push(manualGroup);
+        autoProxyGroupItems.push(regionGroupItems.autoGroupItem);
+        regionSelectGroupItems.push(regionGroupItems.selectGroupItem);
+        regionSelectGroupNames.push(regionGroupItems.selectGroupItem.name);
 
-            // 2. 记录手动组名称 (e.g. "🇺🇸 美国")
-            proxyNameCountries.push(manualGroup.name);
-
-            // 3. AI 策略筛选：如果该国家在 AI 白名单中，提取其“自动选择组”
-            if (aiSupportedNames.includes(matcher.name)) {
-                // 这里存入的是: "♻️ 自动-🇺🇸 美国"
-                proxyNameAI.push(manualGroup.name);
-                proxyNameAIAuto.push(...autoGroup.proxies)
-            }
+        if (AI_REGION_NAMES.includes(regionGroupItems.regionName)) {
+            aiProxyOptionNames.push(regionGroupItems.selectGroupItem.name);
+            aiAutoProxyNodeNames.push(...regionGroupItems.autoGroupItem.proxies);
         }
     });
 
-
-
-    // ===================================
-    //  分类国家节点组 - 合并节点
-    // ===================================
-
-    // 常规节点组
-    const proxyNameCommon = [
+    const commonProxyOptionNames = [
         '默认代理',
         'DIRECT',
         '自动选择',
         '负载均衡-轮询',
         '负载均衡-一致性哈希',
-        ...proxyNameCountries, // 各国手动组: 🇺🇸 美国, 🇭🇰 香港...
-        ...proxyNameUseful        // 兜底显示
+        ...regionSelectGroupNames,
+        ...usableProxyNodeNames,
     ];
 
-    // AI 专用策略组
-    proxyNameAI.push(...proxyNameAIAuto)
-
-    // -----------------------------------
-    // 应用选择组 (Stream/Service Groups)
-    // -----------------------------------
-    const proxyGroupStream = [
-        {
-            name: '默认代理',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Default.png',
-            type: 'select',
-            proxies: ['自动选择', 'DIRECT', '负载均衡-轮询', '负载均衡-一致性哈希', ...proxyNameCountries, ...proxyNameRAW]
-        },
-        {
-            name: 'AI',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/OpenAI.png',
-            type: 'select',
-            proxies: proxyNameAI
-        },
-        {
-            name: 'Microsoft Copilot',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft%20Copilot.png',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-        {
-            name: '战网',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Battle.png',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-        {
-            name: 'Telegram',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Telegram.png',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-        {
-            name: '苹果服务',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Apple.png',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-        {
-            name: '微软服务 - CN',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft.png',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-        {
-            name: '微软服务',
-            icon: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft.png',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-        // 漏网之鱼 (最终兜底选择)
-        {
-            name: '漏网之鱼',
-            type: 'select',
-            proxies: proxyNameCommon
-        },
-
+    const defaultProxyOptionNames = [
+        '自动选择',
+        'DIRECT',
+        '负载均衡-轮询',
+        '负载均衡-一致性哈希',
+        ...regionSelectGroupNames,
+        ...rawProxyNodeNames,
     ];
 
-    // -----------------------------------
-    // 主动代理组 (Auto/Load-Balance Groups)
-    // -----------------------------------
-    // 将总的自动选择和负载均衡组添加到国家/地区自动选择组列表的最前端
-    proxyGroupAuto.unshift(
-        // 总的 URL-Test 自动选择组
-        {
-            name: '自动选择',
-            type: 'url-test',
-            proxies: proxyNameAuto,
-            url: netTestUrl,
-            interval: autoSelectInterval,
-        },
-        {
-            name: '自动选择-AI',
-            type: 'url-test',
-            proxies: proxyNameAIAuto,
-            url: netTestUrl,
-            interval: autoSelectInterval,
-        },
-        // 负载均衡 - 轮询 (Round-Robin)
-        {
-            name: '负载均衡-轮询',
-            type: 'load-balance',
-            proxies: proxyNameAuto,
-            url: netTestUrl,
-            interval: autoSelectInterval,
-            strategy: 'round-robin', // 策略：轮询
-            lazy: true               // 延迟测试
-        },
-        // 负载均衡 - 一致性哈希 (Consistent Hashing)
-        {
-            name: '负载均衡-一致性哈希',
-            type: 'load-balance',
-            proxies: proxyNameAuto,
-            url: netTestUrl,
-            interval: autoSelectInterval,
-            strategy: 'consistent-hashing', // 策略：一致性哈希
-            lazy: true
-        },
+    aiProxyOptionNames.push(...aiAutoProxyNodeNames);
+
+    const defaultProxyGroupItem = createSelectGroupItem(
+        '默认代理',
+        defaultProxyOptionNames,
+        `${ICON_BASE}/Default.png`
+    );
+    const aiProxyGroupItem = createSelectGroupItem('AI', aiProxyOptionNames, `${ICON_BASE}/OpenAI.png`);
+    const catchAllProxyGroupItem = createSelectGroupItem('漏网之鱼', commonProxyOptionNames);
+
+    SERVICE_GROUP_META_LIST.forEach(([groupName, iconFileName]) => {
+        serviceProxyGroupItems.push(
+            createSelectGroupItem(groupName, commonProxyOptionNames, `${ICON_BASE}/${iconFileName}`)
+        );
+    });
+
+    autoProxyGroupItems.unshift(
+        createUrlTestGroupItem('自动选择', autoTestProxyNodeNames),
+        createUrlTestGroupItem('自动选择-AI', aiAutoProxyNodeNames),
+        createLoadBalanceGroupItem('负载均衡-轮询', autoTestProxyNodeNames, 'round-robin'),
+        createLoadBalanceGroupItem('负载均衡-一致性哈希', autoTestProxyNodeNames, 'consistent-hashing'),
     );
 
-    // 合并所有代理组到配置中
-    config['proxy-groups'] = [...proxyGroupStream, ...proxyGroupManual, ...proxyGroupAuto];
+    config['proxy-groups'] = [
+        defaultProxyGroupItem,
+        aiProxyGroupItem,
+        ...serviceProxyGroupItems,
+        catchAllProxyGroupItem,
+        ...regionSelectGroupItems,
+        ...autoProxyGroupItems,
+    ];
 
     // ===================================
     // 规则集提供者（Rule Providers）
