@@ -22,6 +22,10 @@ jobs:
       - name: Set up Python
         run: uv sync
 
+      - name: Download mihomo
+        shell: bash
+        run: bash scripts/download_mihomo.sh
+
       - name: Prepare publish directory
         shell: bash
         run: |
@@ -34,14 +38,36 @@ jobs:
             cp -a rules/. publish-rules/
           fi
 
-      - name: Generate custom rules
+      - name: Split rules (split_rules.py)
         shell: bash
         run: |
           set -euo pipefail
 
           for file in custom/*.yaml; do
-            name="$(basename "$file")"
-            uv run python scripts/merge_rules.py "$file" -o "publish-rules/$name"
+            name="$(basename "$file" .yaml)"
+            echo ">>> 处理: $file -> $name"
+            uv run python scripts/split_rules.py "$file" -o publish-rules/ -p "$name"
+          done
+
+      - name: Convert to MRS (domain & ipcidr)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # domain → MRS
+          for f in publish-rules/domain/*.yaml; do
+            [ -f "$f" ] || continue
+            name="$(basename "$f" .yaml)"
+            echo ">>> domain MRS: $name"
+            ./mihomo convert-ruleset domain yaml "$f" "publish-rules/domain/${name}.mrs"
+          done
+
+          # ipcidr → MRS
+          for f in publish-rules/ipcidr/*.yaml; do
+            [ -f "$f" ] || continue
+            name="$(basename "$f" .yaml)"
+            echo ">>> ipcidr MRS: $name"
+            ./mihomo convert-ruleset ipcidr yaml "$f" "publish-rules/ipcidr/${name}.mrs"
           done
 
       - name: Publish to rules branch
