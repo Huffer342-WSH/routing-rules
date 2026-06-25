@@ -9,8 +9,9 @@ import os
 import sys
 import yaml
 import requests
+from tqdm import tqdm
 from pathlib import Path
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Optional, Tuple
 from urllib.parse import urlparse
 import logging
 
@@ -248,46 +249,25 @@ class RuleMerger:
 
         return rule_type, content
 
-    def _is_covered_by(self, rule1: str, rule2: str) -> bool:
+    def _sort_rules(self, rules: List[str]) -> List[str]:
         """
-        判断rule1是否被rule2覆盖
-
-        例如：
-        - DOMAIN-SUFFIX,api.example.com 被 DOMAIN-SUFFIX,example.com 覆盖
-        - DOMAIN,api.example.com 被 DOMAIN-SUFFIX,example.com 覆盖
+        排序规则，并将 DOMAIN-KEYWORD 放到末尾。
 
         Args:
-            rule1: 被检查的规则
-            rule2: 覆盖规则
+            rules: 规则列表
 
         Returns:
-            True 如果 rule1 被 rule2 覆盖
+            排序后的规则列表
         """
-        type1, content1 = self._parse_rule(rule1)
-        type2, content2 = self._parse_rule(rule2)
+        return sorted(
+            set(rules),
+            key=lambda rule: (
+                self._parse_rule(rule)[0] == 'DOMAIN-KEYWORD',
+                rule,
+            )
+        )
 
-        if not type1 or not type2 or not content1 or not content2:
-            return False
-
-        # DOMAIN-KEYWORD 不做处理
-        if type1 == 'DOMAIN-KEYWORD' or type2 == 'DOMAIN-KEYWORD':
-            return False
-
-        # 如果类型相同
-        if type1 == type2:
-            if type1 in ('DOMAIN-SUFFIX', 'DOMAIN-SUFFIX'):
-                # DOMAIN-SUFFIX,api.example.com 被 DOMAIN-SUFFIX,example.com 覆盖
-                if type1 == 'DOMAIN-SUFFIX':
-                    return content1.endswith('.' + content2) or content1 == content2
-
-        # DOMAIN-SUFFIX 可以覆盖 DOMAIN
-        elif type2 == 'DOMAIN-SUFFIX' and type1 == 'DOMAIN':
-            # DOMAIN,api.example.com 被 DOMAIN-SUFFIX,example.com 覆盖
-            return content1.endswith('.' + content2) or content1 == content2
-
-        return False
-
-    def deduplicate_rules(self, rules: List[str]) -> List[str]:
+    def deduplicate_rules(self, rules: List[str], print_removed: bool = False) -> List[str]:
         """
         去重规则，删除被覆盖的规则
 
@@ -298,6 +278,7 @@ class RuleMerger:
 
         Args:
             rules: 规则列表
+            print_removed: 是否打印被去重删除的规则明细
 
         Returns:
             去重后的规则列表
@@ -305,26 +286,95 @@ class RuleMerger:
         if not rules:
             return rules
 
-        # 转换为set进行基本去重
+        # 转换为set进行基本去重，并缓存解析结果，避免重复执行 _parse_rule。
         unique_rules = list(set(rules))
+        parsed_rules = []
+        for rule in tqdm(unique_rules, desc="解析规则", unit="rule"):
+            rule_type, content = self._parse_rule(rule)
+            parsed_rules.append((rule, rule_type, content))
+
+        # DOMAIN-SUFFIX 覆盖检查使用域名标签反向 Trie（按 '.' 分割后反转）。
+        # 用标签而非字符构建 Trie，天然保证域名边界 ——
+        # "google.com" 的标签是 ["com", "google"]
+        # "content-google.com" 的标签是 ["com", "content-google"]
+        # "google" ≠ "content-google"，不会错误匹配。
+        suffix_trie: dict = {}  # 标签 → 子节点dict 或 terminal_key → 规则字符串
+        terminal_key = ''
+
+        for _, rule_type, content in tqdm(parsed_rules, desc="构建后缀索引", unit="rule"):
+            if rule_type != 'DOMAIN-SUFFIX' or not content:
+                continue
+
+            labels = content.lower().split('.')
+            node = suffix_trie
+            for label in reversed(labels):
+                node = node.setdefault(label, {})
+            node[terminal_key] = f"{rule_type},{content}"
+
+        def covered_by_suffix(content: str, allow_exact: bool) -> Optional[str]:
+            """检查 content 是否被某个 DOMAIN-SUFFIX 覆盖。
+
+            DOMAIN-SUFFIX 按域名标签（以点分隔）匹配：
+              google.com 匹配 www.google.com、mail.google.com、google.com
+              但不匹配 content-google.com（content-google ≠ google 标签）。
+            """
+            labels = list(reversed(content.lower().split('.')))
+            node = suffix_trie
+
+            for index, label in enumerate(labels):
+                if label not in node:
+                    return None
+                node = node[label]
+
+                if terminal_key not in node:
+                    continue
+
+                # 找到了标签级别的后缀匹配
+                # 完全匹配（已遍历完所有标签）：仅 allow_exact=True 时视为覆盖
+                # 部分匹配（还有更多标签）：一定是更具体的子域名，视为覆盖
+                is_exact_match = index == len(labels) - 1
+                if is_exact_match:
+                    if allow_exact:
+                        return node[terminal_key]
+                else:
+                    return node[terminal_key]
+
+            return None
 
         # 移除被覆盖的规则
         kept_rules = []
+        removed_by_rule: Dict[str, List[str]] = {}
 
-        for i, rule1 in enumerate(unique_rules):
-            covered = False
+        for rule, rule_type, content in tqdm(parsed_rules, desc="检查覆盖", unit="rule"):
+            # DOMAIN-KEYWORD 不做覆盖处理；无法解析的规则也保留。
+            if not rule_type or not content or rule_type == 'DOMAIN-KEYWORD':
+                kept_rules.append(rule)
+                continue
 
-            for j, rule2 in enumerate(unique_rules):
-                if i != j and self._is_covered_by(rule1, rule2):
-                    covered = True
-                    break
+            covered_by = None
+            if rule_type == 'DOMAIN-SUFFIX':
+                # DOMAIN-SUFFIX,starrycoding.com 被 DOMAIN-SUFFIX,coding.com 覆盖。
+                covered_by = covered_by_suffix(content, allow_exact=False)
+            elif rule_type == 'DOMAIN':
+                # DOMAIN,example.com 也会被 DOMAIN-SUFFIX,example.com 覆盖。
+                covered_by = covered_by_suffix(content, allow_exact=True)
 
-            if not covered:
-                kept_rules.append(rule1)
+            if covered_by:
+                if print_removed:
+                    removed_by_rule.setdefault(covered_by, []).append(rule)
+            else:
+                kept_rules.append(rule)
 
         removed_count = len(unique_rules) - len(kept_rules)
         if removed_count > 0:
             logger.info(f"去重完成：删除 {removed_count} 条被覆盖的规则")
+            if print_removed:
+                logger.info("被覆盖规则明细:")
+                for covering_rule in sorted(removed_by_rule):
+                    removed_rules = sorted(removed_by_rule[covering_rule])
+                    logger.info(f"  {covering_rule} 删除 {len(removed_rules)} 条规则:")
+                    for removed_rule in removed_rules:
+                        logger.info(f"    - {removed_rule}")
 
         return kept_rules
 
@@ -393,7 +443,7 @@ class RuleMerger:
         return all_rules
 
     def merge_rules_file(self, config_file: str, output_file: str = None,
-                         deduplicate: bool = True) -> str:
+                         deduplicate: bool = True, print_removed: bool = False) -> str:
         """
         合并规则文件
 
@@ -401,6 +451,7 @@ class RuleMerger:
             config_file: 配置文件路径（包含include和payload的YAML文件）
             output_file: 输出文件路径，如果为None则在temp目录生成
             deduplicate: 是否进行去重
+            print_removed: 是否打印被去重删除的规则明细
 
         Returns:
             输出文件路径
@@ -431,11 +482,11 @@ class RuleMerger:
         # 去重处理
         if deduplicate:
             original_count = len(all_rules)
-            all_rules = self.deduplicate_rules(all_rules)
+            all_rules = self.deduplicate_rules(all_rules, print_removed)
             logger.info(f"去重前: {original_count} 条, 去重后: {len(all_rules)} 条")
 
         # 转换为列表并排序
-        all_rules = sorted(list(set(all_rules)))
+        all_rules = self._sort_rules(all_rules)
         logger.info(f"合并后共 {len(all_rules)} 条规则")
 
         # 生成输出文件
@@ -485,7 +536,7 @@ class RuleMerger:
         return str(output_path)
 
     def merge_multiple_files(self, config_files: List[str], output_file: str = None,
-                            deduplicate: bool = True) -> str:
+                            deduplicate: bool = True, print_removed: bool = False) -> str:
         """
         合并多个配置文件
 
@@ -493,6 +544,7 @@ class RuleMerger:
             config_files: 配置文件路径列表
             output_file: 输出文件路径
             deduplicate: 是否进行去重
+            print_removed: 是否打印被去重删除的规则明细
 
         Returns:
             输出文件路径
@@ -522,11 +574,11 @@ class RuleMerger:
         # 去重处理
         if deduplicate:
             original_count = len(all_rules)
-            all_rules = self.deduplicate_rules(all_rules)
+            all_rules = self.deduplicate_rules(all_rules, print_removed)
             logger.info(f"去重前: {original_count} 条, 去重后: {len(all_rules)} 条")
 
         # 转换为列表并排序
-        all_rules = sorted(list(set(all_rules)))
+        all_rules = self._sort_rules(all_rules)
         logger.info(f"总共合并 {len(all_rules)} 条规则")
 
         # 生成输出文件
@@ -601,6 +653,9 @@ def main():
 
   # 禁用去重
   python merge_rules.py config.yaml --no-dedupe
+
+  # 打印被去重删除的规则明细
+  python merge_rules.py config.yaml --print-removed
         """
     )
 
@@ -632,6 +687,12 @@ def main():
         help='禁用去重功能'
     )
 
+    parser.add_argument(
+        '--print-removed',
+        action='store_true',
+        help='打印被去重删除的规则明细'
+    )
+
     args = parser.parse_args()
 
     try:
@@ -640,10 +701,20 @@ def main():
 
         if args.merge or len(args.files) > 1:
             # 合并多个文件
-            output = merger.merge_multiple_files(args.files, args.output, deduplicate)
+            output = merger.merge_multiple_files(
+                args.files,
+                args.output,
+                deduplicate,
+                args.print_removed
+            )
         else:
             # 处理单个文件
-            output = merger.merge_rules_file(args.files[0], args.output, deduplicate)
+            output = merger.merge_rules_file(
+                args.files[0],
+                args.output,
+                deduplicate,
+                args.print_removed
+            )
 
         try:
             print(f"\n[OK] 合并完成！输出文件: {output}")
