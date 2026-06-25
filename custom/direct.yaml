@@ -1,0 +1,20 @@
+include:
+  - {
+      type: txt,
+      behavior: domain,
+      url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cn.list,
+    }
+
+payload:
+  - DOMAIN-SUFFIX,bettergi.com
+  - DOMAIN,download.pytorch.org
+  - DOMAIN,developer.download.nvidia.com
+  - DOMAIN,oi-wiki.org
+  - DOMAIN,www.asasmr3.com
+  - DOMAIN,www.a3asmr.com
+  - DOMAIN,cdn2.asmrfx.com
+  - DOMAIN,tx.asmras.net
+  - DOMAIN,clash.razord.top
+  - DOMAIN,yacd.haishan.me
+  - DOMAIN-SUFFIX,entitlenow.com
+  - DOMAIN-SUFFIX,starrycoding.com
