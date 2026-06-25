@@ -321,37 +321,25 @@ function main(config) {
             url: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt',
             interval: rulesetUpdateInterval // 每天更新
         },
-        'proxy': {
+        'domain-proxy': {
             type: 'http',
-            format: 'yaml',
-            behavior: 'classical',
-            url: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/proxy.yaml',
-            interval: rulesetUpdateInterval
-        },
-        'direct': {
-            type: 'http',
+            format: 'mrs',
             behavior: 'domain',
-            url: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt',
+            url: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/domain/proxy.mrs',
             interval: rulesetUpdateInterval
         },
-        'private': {
+        'domain-direct': {
             type: 'http',
+            format: 'mrs',
             behavior: 'domain',
-            url: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt',
+            url: 'https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/domain/direct.mrs',
             interval: rulesetUpdateInterval
         },
-        'Anthropic': {
+        'domain-ai': {
             type: 'http',
-            behavior: 'classical',
-            format: 'yaml',
-            url: "https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/anthropic.yaml",
-            interval: rulesetUpdateInterval
-        },
-        'AI': {
-            type: 'http',
-            behavior: 'classical',
-            format: 'yaml',
-            url: "https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/category-ai-chat-!cn.yaml",
+            format: 'mrs',
+            behavior: 'domain',
+            url: "https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/domain/category-ai-chat-!cn.mrs",
             interval: rulesetUpdateInterval
         }
     };
@@ -366,9 +354,6 @@ function main(config) {
         // -----------------------------------
         // 1. 强制直连/代理规则（覆盖规则集）
         // -----------------------------------
-
-        // Microsoft Copilot 规则
-        'DOMAIN-KEYWORD,copilot.microsoft.com,Microsoft Copilot',
 
         // 战网
         'PROCESS-NAME,Battle.net,战网',
@@ -402,7 +387,6 @@ function main(config) {
         // 雀魂
         'DOMAIN,game.maj-soul.com,默认代理',
         'DOMAIN-KEYWORD,majsoul,DIRECT',
-        'DOMAIN-KEYWORD,maj-soul,DIRECT',
 
         // 柚子社（仅当存在“节点组-🇯🇵日本”时启用）
         ...(hasJapanGroup ? [
@@ -414,21 +398,6 @@ function main(config) {
         'DOMAIN-SUFFIX,googleapis.com,默认代理',
         'DOMAIN-SUFFIX,gstatic.com,默认代理',
 
-        // 直连的域名
-        'DOMAIN,download.pytorch.org,DIRECT',
-        'DOMAIN,developer.download.nvidia.com,DIRECT',
-        'DOMAIN,oi-wiki.org,DIRECT',
-        'DOMAIN,www.asasmr3.com,DIRECT',
-        'DOMAIN,cdn2.asmrfx.com,DIRECT',
-        'DOMAIN,tx.asmras.net,DIRECT',
-        'DOMAIN,clash.razord.top,DIRECT', // Yacd 面板相关直连
-        'DOMAIN,yacd.haishan.me,DIRECT',  // Yacd 面板相关直连
-        'DOMAIN-SUFFIX,entitlenow.com,DIRECT',
-        'DOMAIN-KEYWORD,eriktse,DIRECT',
-        'DOMAIN-KEYWORD,asasmr,DIRECT',
-        'DOMAIN-KEYWORD,starrycoding,DIRECT',
-        'DOMAIN-KEYWORD,eriktse,DIRECT',
-
         // -----------------------------------
         // 2. 外部规则集调用（Rule-Set Providers）
         // -----------------------------------
@@ -436,21 +405,25 @@ function main(config) {
         'GEOSITE,telegram,Telegram',
         'GEOSITE,microsoft@cn,微软服务 - CN',
         'GEOSITE,microsoft,微软服务',
-        'RULE-SET,Anthropic,AI',
-        'GEOSITE,google-gemini,AI',
-        'RULE-SET,AI,AI',
+
+        // AI
+        'RULE-SET,domain-ai,AI',
+        'IP-CIDR,160.79.104.0/21,AI', //claude
+        'IP-CIDR6,2607:6bc0::/32,AI',
+        'IP-ASN,399358,AI',
 
         // 通用代理
-        'RULE-SET,private,DIRECT',
-        'RULE-SET,direct,DIRECT',
-        'RULE-SET,proxy,默认代理',
         'RULE-SET,reject,REJECT',
+        'RULE-SET,domain-direct,DIRECT',
+        'GEOSITE,private,DIRECT',
+        'RULE-SET,domain-proxy,默认代理',
+        'GEOSITE,geolocation-!cn,默认代理',
 
         // IP
         'GEOIP,telegram,Telegram',
         'GEOIP,LAN,DIRECT',
         'GEOIP,CN,DIRECT',
-        'GEOSITE,geolocation-!cn,默认代理',
+
 
         // 任何未匹配的流量都走 '漏网之鱼' 代理组
         'MATCH,漏网之鱼'
