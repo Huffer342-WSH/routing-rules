@@ -1,5 +1,5 @@
 [project]
-name = "cfw-parsers"
+name = "routing-rules"
 version = "0.1.0"
 description = "Clash for Party 配置文件解析和规则合并工具"
 readme = "README.md"
