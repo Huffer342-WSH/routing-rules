@@ -21,11 +21,34 @@ function main(config) {
     config.sniffer = {
         enable: true,
         "parse-pure-ip": true,
+        "force-dns-mapping": true,
+        "override-destination": false,
         sniff: {
-            HTTP: { ports: [80, "8080-8880"], "override-destination": true },
-            TLS: { ports: [443, 8443] },
-            QUIC: { ports: [443, 8443] },
+            HTTP: {
+                ports: [80, 443],
+                "override-destination": false
+            },
+            TLS: {
+                ports: [443]
+            }
         },
+        "skip-domain": [
+            "+.push.apple.com"
+        ],
+        "skip-dst-address": [
+            "91.105.192.0/23",
+            "91.108.4.0/22",
+            "91.108.8.0/21",
+            "91.108.16.0/21",
+            "91.108.56.0/22",
+            "95.161.64.0/20",
+            "149.154.160.0/20",
+            "185.76.151.0/24",
+            "2001:67c:4e8::/48",
+            "2001:b28:f23c::/47",
+            "2001:b28:f23f::/48",
+            "2a0a:f280:203::/48"
+        ]
     };
 
     // -----------------------------------
@@ -33,61 +56,55 @@ function main(config) {
     // -----------------------------------
     config["dns"] = {
         enable: true,
-        ipv6: false,
+        ipv6: true,
+        "respect-rules": false,
         "enhanced-mode": "fake-ip",
         "fake-ip-range": "198.18.0.1/16",
-        "respect-rules": true,       // dns 连接遵守路由规则
+        "fake-ip-filter": [
+            '"*"',
+            '+.lan',
+            '+.local',
+            'time.*.com',
+            'ntp.*.com',
+            '+.market.xiaomi.com'
+        ],
 
-        // 用于解析 DNS 服务器 的域名，必须为 IP
-        "default-nameserver": ["223.5.5.5"],
+        // 用于解析DNS服务器的域名（如dns.google -> 8.8.8.8），必须为IP
+        "default-nameserver": ["223.5.5.5", "119.29.29.29"],
 
         // 代理节点域名解析服务器，仅用于解析代理节点的域名
-        "proxy-server-nameserver": ["https://dns.alidns.com/dns-query"],
+        "proxy-server-nameserver": ["https://dns.alidns.com/dns-query", "https://d.atri.ink/dns-query"],
         "proxy-server-nameserver-policy": {
+            // CTC-02机场
             "+.ctcxianyu.com": ['https://38.76.213.238:8080/dns-query', 'https://sublol.iotechn.com:10086/dns-query'],
             "+.525536.xyz": ['https://38.76.213.238:8080/dns-query', 'https://sublol.iotechn.com:10086/dns-query'],
         },
 
-        // 域名匹配到代理：直接将域名发给代理，不再需要Clash解析DNS
-        // 域名匹配到直连：由Clash解析DNS，
-
-        // nameserver-policy可以指定部分域名的DNS
+        // 适用于直连国外服务器时，通过国外的DNS解析得到可靠的IP
         "nameserver-policy": {
-            "geosite:cn": ["https://dns.alidns.com/dns-query", "https://doh.pub/dns-query"],
-            "geosite:geolocation-!cn": ["https://dns.alidns.com/dns-query", "https://dns.google/dns-query", "https://cloudflare-dns.com/dns-query"],
+            "geosite:gfw": [
+                "https://cloudflare-dns.com/dns-query#默认代理",
+                "https://d.atri.ink/dns-query"
+            ]
         },
-
-        // 没有被nameserver-policy匹配的域名用nameserver和fallback的DNS查询
         "nameserver": [
-            "https://dns.alidns.com/dns-query",
-            "https://doh.pub/dns-query"
+            "system",
+            "223.5.5.5",
         ],
 
-        "fallback": [
-            "https://dns.google/dns-query",
-            "https://cloudflare-dns.com/dns-query",
-            "https://d.atri.ink/dns-query"
-        ],
-
-        // 符合fallback-filter的只是用fallback的DNS结果
+        // 查询得到虚假IP时使用fallback的结果
         "fallback-filter": {
-            "geoip": true,          // 开启 GeoIP 判断
-            "geoip-code": "CN",     // 如果解析出来的 IP 不是中国的（CN），则丢弃 nameserver 的结果，采用 fallback
-            "ipcidr": [             // 常见的虚假 IP/污染 IP 段
+            "ipcidr": [
                 "240.0.0.0/4",
                 "0.0.0.0/32",
                 "127.0.0.1/32"
             ],
         },
-
-        "fake-ip-filter": [
-            "*.lan",
-            "*.local",
-            "localhost.ptlogin2.qq.com",
-            "time.*.com",
-            "ntp.*.com",
-            "+.market.xiaomi.com"
-        ]
+        "fallback": [
+            "https://cloudflare-dns.com/dns-query#默认代理",
+            "https://d.atri.ink/dns-query",
+            'https://38.76.213.238:8080/dns-query'
+        ],
     };
 
     // ===================================
