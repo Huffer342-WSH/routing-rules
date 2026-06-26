@@ -66,6 +66,7 @@ function main(config) {
         "fallback": [
             "https://dns.google/dns-query",
             "https://cloudflare-dns.com/dns-query",
+            "https://d.atri.ink/dns-query"
         ],
 
         // 符合fallback-filter的只是用fallback的DNS结果
@@ -394,10 +395,6 @@ function main(config) {
             'DOMAIN-SUFFIX,dmm.co.jp,节点组-🇯🇵日本',
         ] : []),
 
-        //机场
-        'DOMAIN-SUFFIX,googleapis.com,默认代理',
-        'DOMAIN-SUFFIX,gstatic.com,默认代理',
-
         // -----------------------------------
         // 2. 外部规则集调用（Rule-Set Providers）
         // -----------------------------------
@@ -417,13 +414,14 @@ function main(config) {
         'RULE-SET,domain-direct,DIRECT',
         'GEOSITE,private,DIRECT',
         'RULE-SET,domain-proxy,默认代理',
+        'GEOSITE,gfw,默认代理',
         'GEOSITE,geolocation-!cn,默认代理',
 
         // IP
+        'GEOIP,private,DIRECT,no-resolve',
         'GEOIP,telegram,Telegram',
         'GEOIP,LAN,DIRECT',
         'GEOIP,CN,DIRECT',
-
 
         // 任何未匹配的流量都走 '漏网之鱼' 代理组
         'MATCH,漏网之鱼'
