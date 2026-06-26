@@ -7,6 +7,15 @@ include:
   - { type: yaml, behavior: classical, path: rules/anthropic.yaml }
 
 payload:
+  # 非AI专用，但是也需要代理的
+  - DOMAIN,fonts.gstatic.com
+  - DOMAIN,play.google.com
+  - DOMAIN,www.googletagmanager.com
+  - DOMAIN,www.google-analytics.com
+  - DOMAIN,lh3.googleusercontent.com
+  - DOMAIN,waa-pa.clients6.google.com
+  - DOMAIN,signaler-pa.clients6.google.com
+  - DOMAIN,ogads-pa.clients6.google.com
   # 核心域名
   - DOMAIN-SUFFIX,anthropic.com
   - DOMAIN-SUFFIX,claude.ai
