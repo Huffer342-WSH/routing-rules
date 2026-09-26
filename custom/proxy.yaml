@@ -6,10 +6,13 @@ include:
     }
 
 payload:
+  - DOMAIN,app.chatplus.jp
   - DOMAIN,firpe.cn
   - DOMAIN,arthurchiao.art
   - DOMAIN,su.anywayfosec.xyz
   - DOMAIN,999.ts1110.top
+  - DOMAIN,bitcash.jp
+  - DOMAIN,fantia.jp
   - DOMAIN,cdn.ramenpay.net
   - DOMAIN,cdn.xiaolincoding.com
   - DOMAIN,linuxmirrors.cn
@@ -38,3 +41,4 @@ payload:
   - DOMAIN-SUFFIX,figshare.com
   - DOMAIN-SUFFIX,hotpe.top
   - DOMAIN-SUFFIX,googleapis.cn
+  - DOMAIN-SUFFIX,toranoana.jp

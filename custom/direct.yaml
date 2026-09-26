@@ -16,6 +16,7 @@ exclude:
 
 payload:
   - DOMAIN-SUFFIX,bettergi.com
+  - DOMAIN,anibt.net
   - DOMAIN,download.pytorch.org
   - DOMAIN,developer.download.nvidia.com
   - DOMAIN,invite.linuxdo.org
