@@ -25,6 +25,7 @@ payload:
   - DOMAIN,media.inkscape.org
   - DOMAIN,inkscape.org
   - DOMAIN-SUFFIX,codeium.com
+  - DOMAIN-SUFFIX,ctc.run
   - DOMAIN-SUFFIX,dimensions.ai
   - DOMAIN-SUFFIX,readcube.com
   - DOMAIN-SUFFIX,prismic.io
