@@ -1,0 +1,669 @@
+proxy-providers:
+  按月机场A:
+    type: http
+    interval: 3600
+    proxy: DIRECT
+    header:
+      User-Agent: ["clash.meta"]
+    exclude-filter: '剩余|套餐|网址|客服|过滤|时间|境外'
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600
+      timeout: 5000
+      lazy: true
+    url: "https://example.com/monthly-subscription" # 填入订阅URL
+    override:
+      additional-prefix: "[按月・机场A] " # 修改名字（保留按月/定量）
+      # 按原始节点名补国旗；已有任意国旗则保留，机场前缀最后添加。
+      proxy-name: &flag-renames
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z]))).+'
+          target: '🇺🇸 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z]))).+'
+          target: '🇭🇰 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z]))).+'
+          target: '🇹🇼 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z]))).+'
+          target: '🇯🇵 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z]))).+'
+          target: '🇸🇬 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z]))).+'
+          target: '🇰🇷 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z]))).+'
+          target: '🇬🇧 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z]))).+'
+          target: '🇫🇷 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))).+'
+          target: '🇩🇪 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z]))).+'
+          target: '🇦🇺 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))).+'
+          target: '🇨🇦 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:土耳其|Turkey|Türkiye|Istanbul|🇹🇷|(?<![A-Za-z])TR(?![A-Za-z]))).+'
+          target: '🇹🇷 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:阿根廷|Argentina|🇦🇷|(?<![A-Za-z])AR(?![A-Za-z]))).+'
+          target: '🇦🇷 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:印度(?!尼西亚|尼西亞)|India(?!nesia)|🇮🇳|(?<![A-Za-z])IN(?![A-Za-z]))).+'
+          target: '🇮🇳 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:越南|Vietnam|🇻🇳|(?<![A-Za-z])VN(?![A-Za-z]))).+'
+          target: '🇻🇳 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:俄罗斯|俄羅斯|Russia|Moscow|🇷🇺|(?<![A-Za-z])RU(?![A-Za-z]))).+'
+          target: '🇷🇺 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:荷兰|荷蘭|Netherlands|Amsterdam|🇳🇱|(?<![A-Za-z])NL(?![A-Za-z]))).+'
+          target: '🇳🇱 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:尼日利亚|尼日利亞|Nigeria|Lagos|🇳🇬|(?<![A-Za-z])NG(?![A-Za-z]))).+'
+          target: '🇳🇬 $0'
+        - pattern: '(?i)^(?!.*[🇦-🇿])(?=.*(?:马其顿|馬其頓|Macedonia|🇲🇰|(?<![A-Za-z])MK(?![A-Za-z]))).+'
+          target: '🇲🇰 $0'
+  定量机场B:
+    type: http
+    interval: 3600
+    proxy: DIRECT
+    header:
+      User-Agent: ["clash.meta"]
+    exclude-filter: '剩余|套餐|网址|客服|过滤|时间|境外'
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600
+      timeout: 5000
+      lazy: true
+    url: "https://example.com/quota-subscription"
+    override:
+      additional-prefix: "[定量・机场B] "
+      # 复用首个机场定义的国旗规则；新增机场也使用此引用。
+      proxy-name: *flag-renames
+
+# Mihomo 原生 provider 模板；无需 JS / Sub-Store。
+# 只修改 proxy-providers：复制机场块，填写 URL 和唯一前缀。
+# 前缀必须为 "[按月・机场名] " 或 "[定量・机场名] "（末尾空格也保留）。
+# 机场名不要包含 ]；地区匹配只检查前缀后的原始节点名。
+# 默认按月，不自动切换定量池；健康检查仍可能产生少量定量流量。
+# 地区为空时 REJECT，不自动直连。
+# 订阅须返回 Mihomo 支持的节点内容；User-Agent 用于请求 Clash 格式。
+# 完整使用说明和验证范围见 docs/mihomo-provider-template.md。
+
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+tcp-concurrent: true
+geodata-mode: true
+find-process-mode: strict
+sniffer:
+  enable: true
+  parse-pure-ip: true
+  force-dns-mapping: true
+  override-destination: false
+  sniff:
+    HTTP:
+      ports:
+      - 80
+      - 443
+    TLS:
+      ports:
+      - 443
+  skip-domain:
+  - +.push.apple.com
+  skip-dst-address:
+  - 91.105.192.0/23
+  - 91.108.4.0/22
+  - 91.108.8.0/21
+  - 91.108.16.0/21
+  - 91.108.56.0/22
+  - 95.161.64.0/20
+  - 149.154.160.0/20
+  - 185.76.151.0/24
+  - 2001:67c:4e8::/48
+  - 2001:b28:f23c::/47
+  - 2001:b28:f23f::/48
+  - 2a0a:f280:203::/48
+dns:
+  enable: true
+  ipv6: true
+  respect-rules: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+  - '*'
+  - +.lan
+  - +.local
+  - time.*.com
+  - ntp.*.com
+  - +.market.xiaomi.com
+  default-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  proxy-server-nameserver:
+  - https://dns.alidns.com/dns-query
+  - https://d.atri.ink/dns-query
+  proxy-server-nameserver-policy:
+    +.ctcxianyu.com:
+    - https://38.76.213.238:8080/dns-query
+    - https://sublol.iotechn.com:10086/dns-query
+    +.525536.xyz:
+    - https://38.76.213.238:8080/dns-query
+    - https://sublol.iotechn.com:10086/dns-query
+  nameserver-policy:
+    geosite:gfw:
+    - https://cloudflare-dns.com/dns-query#默认代理
+    - https://d.atri.ink/dns-query#默认代理
+  nameserver:
+  - system
+  - 223.5.5.5
+  fallback-lazy-query: true
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+    - 240.0.0.0/4
+    - 0.0.0.0/32
+    - 127.0.0.1/32
+  fallback:
+  - https://cloudflare-dns.com/dns-query#默认代理
+  - https://d.atri.ink/dns-query
+  - https://38.76.213.238:8080/dns-query
+
+# 共用配置：YAML 锚点仅用于复用，不执行脚本。
+x-select: &select
+  type: select
+  include-all-providers: true
+  empty-fallback: REJECT
+
+x-auto: &auto
+  type: url-test
+  include-all-providers: true
+  url: https://www.gstatic.com/generate_204
+  interval: 600
+  tolerance: 50
+  lazy: true
+  empty-fallback: REJECT
+  # 高倍率仍能手选；自动组/负载均衡排除 >1 倍（常见 倍/x/X 命名）。
+  exclude-filter: '(?<![\d.])(?:0*(?:[2-9]\d*|1\d+)(?:\.\d*)?|0*1\.0*[1-9]\d*)\s*[倍xX]|[倍xX]\s*(?:0*(?:[2-9]\d*|1\d+)(?:\.\d*)?|0*1\.0*[1-9]\d*)(?![\d.])'
+
+proxy-groups:
+  - name: '默认代理'
+    <<: *select
+    proxies:
+    - 自动选择
+    - 负载均衡-轮询
+    - 负载均衡-一致性哈希
+    - DIRECT
+    - 节点组-🇺🇸美国
+    - 节点组-🇭🇰香港
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    - 节点组-🇦🇺澳大利亚
+    - 节点组-🇨🇦加拿大
+    - 节点组-🌐其他地区
+    icon: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Default.png
+
+  - name: 'AI'
+    <<: *select
+    proxies:
+    - 自动选择-AI
+    - 节点组-🇺🇸美国
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
+    icon: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/OpenAI.png
+
+  - name: '战网'
+    <<: *select
+    proxies:
+    - 默认代理
+    - DIRECT
+    - 自动选择
+    - 负载均衡-轮询
+    - 负载均衡-一致性哈希
+    - 节点组-🇺🇸美国
+    - 节点组-🇭🇰香港
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    - 节点组-🇦🇺澳大利亚
+    - 节点组-🇨🇦加拿大
+    - 节点组-🌐其他地区
+    icon: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Battle.png
+
+  - name: 'Telegram'
+    <<: *select
+    proxies:
+    - 默认代理
+    - DIRECT
+    - 自动选择
+    - 负载均衡-轮询
+    - 负载均衡-一致性哈希
+    - 节点组-🇺🇸美国
+    - 节点组-🇭🇰香港
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    - 节点组-🇦🇺澳大利亚
+    - 节点组-🇨🇦加拿大
+    - 节点组-🌐其他地区
+    icon: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Telegram.png
+
+  - name: '微软服务 - CN'
+    <<: *select
+    proxies:
+    - 默认代理
+    - DIRECT
+    - 自动选择
+    - 负载均衡-轮询
+    - 负载均衡-一致性哈希
+    - 节点组-🇺🇸美国
+    - 节点组-🇭🇰香港
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    - 节点组-🇦🇺澳大利亚
+    - 节点组-🇨🇦加拿大
+    - 节点组-🌐其他地区
+    icon: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft.png
+
+  - name: '微软服务'
+    <<: *select
+    proxies:
+    - 默认代理
+    - DIRECT
+    - 自动选择
+    - 负载均衡-轮询
+    - 负载均衡-一致性哈希
+    - 节点组-🇺🇸美国
+    - 节点组-🇭🇰香港
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    - 节点组-🇦🇺澳大利亚
+    - 节点组-🇨🇦加拿大
+    - 节点组-🌐其他地区
+    icon: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/main/icon/Microsoft.png
+
+  - name: '漏网之鱼'
+    <<: *select
+    proxies:
+    - 默认代理
+    - DIRECT
+    - 自动选择
+    - 负载均衡-轮询
+    - 负载均衡-一致性哈希
+    - 节点组-🇺🇸美国
+    - 节点组-🇭🇰香港
+    - 节点组-🇹🇼台湾
+    - 节点组-🇯🇵日本
+    - 节点组-🇸🇬新加坡
+    - 节点组-🇰🇷韩国
+    - 节点组-🇬🇧英国
+    - 节点组-🇫🇷法国
+    - 节点组-🇩🇪德国
+    - 节点组-🇦🇺澳大利亚
+    - 节点组-🇨🇦加拿大
+    - 节点组-🌐其他地区
+
+  - name: '自动选择'
+    type: select
+    proxies:
+    - 自动选择-按月
+    - 自动选择-定量
+
+  - name: '负载均衡-轮询'
+    type: select
+    proxies:
+    - 负载均衡-轮询-按月
+    - 负载均衡-轮询-定量
+
+  - name: '负载均衡-一致性哈希'
+    type: select
+    proxies:
+    - 负载均衡-一致性哈希-按月
+    - 负载均衡-一致性哈希-定量
+
+  - name: '自动选择-AI'
+    type: select
+    proxies:
+    - 自动选择-AI-按月
+    - 自动选择-AI-定量
+
+  - name: '自动选择-按月'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*
+
+  - name: '自动选择-AI-按月'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
+
+  - name: '负载均衡-轮询-按月'
+    <<: *auto
+    type: load-balance
+    strategy: round-robin
+    filter: (?i)^\[按月・[^\]]+\] .*
+
+  - name: '负载均衡-一致性哈希-按月'
+    <<: *auto
+    type: load-balance
+    strategy: consistent-hashing
+    filter: (?i)^\[按月・[^\]]+\] .*
+
+  - name: '自动选择-定量'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*
+
+  - name: '自动选择-AI-定量'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
+
+  - name: '负载均衡-轮询-定量'
+    <<: *auto
+    type: load-balance
+    strategy: round-robin
+    filter: (?i)^\[定量・[^\]]+\] .*
+
+  - name: '负载均衡-一致性哈希-定量'
+    <<: *auto
+    type: load-balance
+    strategy: consistent-hashing
+    filter: (?i)^\[定量・[^\]]+\] .*
+
+  - name: '节点组-🇺🇸美国'
+    <<: *select
+    proxies:
+    - ♻️🇺🇸美国-按月自动
+    - ♻️🇺🇸美国-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z]))
+
+  - name: '♻️🇺🇸美国-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇺🇸美国-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇭🇰香港'
+    <<: *select
+    proxies:
+    - ♻️🇭🇰香港-按月自动
+    - ♻️🇭🇰香港-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z]))
+
+  - name: '♻️🇭🇰香港-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇭🇰香港-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇹🇼台湾'
+    <<: *select
+    proxies:
+    - ♻️🇹🇼台湾-按月自动
+    - ♻️🇹🇼台湾-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z]))
+
+  - name: '♻️🇹🇼台湾-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇹🇼台湾-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇯🇵日本'
+    <<: *select
+    proxies:
+    - ♻️🇯🇵日本-按月自动
+    - ♻️🇯🇵日本-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z]))
+
+  - name: '♻️🇯🇵日本-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇯🇵日本-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇸🇬新加坡'
+    <<: *select
+    proxies:
+    - ♻️🇸🇬新加坡-按月自动
+    - ♻️🇸🇬新加坡-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z]))
+
+  - name: '♻️🇸🇬新加坡-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇸🇬新加坡-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇰🇷韩国'
+    <<: *select
+    proxies:
+    - ♻️🇰🇷韩国-按月自动
+    - ♻️🇰🇷韩国-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z]))
+
+  - name: '♻️🇰🇷韩国-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇰🇷韩国-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇬🇧英国'
+    <<: *select
+    proxies:
+    - ♻️🇬🇧英国-按月自动
+    - ♻️🇬🇧英国-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z]))
+
+  - name: '♻️🇬🇧英国-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇬🇧英国-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇫🇷法国'
+    <<: *select
+    proxies:
+    - ♻️🇫🇷法国-按月自动
+    - ♻️🇫🇷法国-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z]))
+
+  - name: '♻️🇫🇷法国-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇫🇷法国-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇩🇪德国'
+    <<: *select
+    proxies:
+    - ♻️🇩🇪德国-按月自动
+    - ♻️🇩🇪德国-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
+
+  - name: '♻️🇩🇪德国-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇩🇪德国-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇦🇺澳大利亚'
+    <<: *select
+    proxies:
+    - ♻️🇦🇺澳大利亚-按月自动
+    - ♻️🇦🇺澳大利亚-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z]))
+
+  - name: '♻️🇦🇺澳大利亚-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇦🇺澳大利亚-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🇨🇦加拿大'
+    <<: *select
+    proxies:
+    - ♻️🇨🇦加拿大-按月自动
+    - ♻️🇨🇦加拿大-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))
+
+  - name: '♻️🇨🇦加拿大-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] .*(?:加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))
+    interval: 300
+
+  - name: '♻️🇨🇦加拿大-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] .*(?:加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))
+    interval: 300
+
+  - name: '节点组-🌐其他地区'
+    <<: *select
+    proxies:
+    - ♻️🌐其他地区-按月自动
+    - ♻️🌐其他地区-定量自动
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] (?!.*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z])|澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z])|加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))).*
+
+  - name: '♻️🌐其他地区-按月自动'
+    <<: *auto
+    filter: (?i)^\[按月・[^\]]+\] (?!.*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z])|澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z])|加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))).*
+    interval: 300
+
+  - name: '♻️🌐其他地区-定量自动'
+    <<: *auto
+    filter: (?i)^\[定量・[^\]]+\] (?!.*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|香港|Hong|🇭🇰|(?<![A-Za-z])HK(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z])|澳大利亚|澳大利亞|Australia|Sydney|🇦🇺|(?<![A-Za-z])AU(?![A-Za-z])|加拿大|Canada|Toronto|🇨🇦|(?<![A-Za-z])CA(?![A-Za-z]))).*
+    interval: 300
+
+rule-providers:
+  reject:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Only.Ads.mrs
+    interval: 64800
+  domain-proxy:
+    type: http
+    format: mrs
+    behavior: domain
+    url: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/domain/proxy.mrs
+    interval: 64800
+  domain-direct:
+    type: http
+    format: mrs
+    behavior: domain
+    url: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/domain/direct.mrs
+    interval: 64800
+  domain-ai:
+    type: http
+    format: mrs
+    behavior: domain
+    url: https://raw.githubusercontent.com/Huffer342-WSH/routing-rules/refs/heads/rules/domain/category-ai-chat-!cn.mrs
+    interval: 64800
+rules:
+- PROCESS-NAME,Battle.net,战网
+- PROCESS-NAME,Battle.net.exe,战网
+- DOMAIN-SUFFIX,battle.net,战网
+- DOMAIN-SUFFIX,blizzard.com,战网
+- DOMAIN-SUFFIX,alipay.com,DIRECT
+- DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+- DOMAIN,steamcommunity.com,默认代理
+- DOMAIN,api.steampowered.com,默认代理
+- PROCESS-NAME,steamwebhelper,默认代理
+- PROCESS-NAME,steamwebhelper.exe,默认代理
+- PROCESS-NAME,steam,DIRECT
+- PROCESS-NAME,steam.exe,DIRECT
+- DOMAIN,fastly-download.epicgames.com,DIRECT
+- PROCESS-NAME,EpicWebHelper.exe,默认代理
+- PROCESS-NAME,EpicGamesLauncher.exe,DIRECT
+- PROCESS-NAME,MathWorksProductInstaller,DIRECT
+- PROCESS-NAME,MathWorksProductInstaller.exe,DIRECT
+- PROCESS-NAME,MATLABWindow,DIRECT
+- PROCESS-NAME,MATLABWindow.exe,DIRECT
+- DOMAIN,esd.mathworks.com,DIRECT
+- DOMAIN-SUFFIX,mathworks.com,默认代理
+- DOMAIN,game.maj-soul.com,默认代理
+- DOMAIN-KEYWORD,majsoul,DIRECT
+- DOMAIN-SUFFIX,googleapis.cn,默认代理
+- DOMAIN-SUFFIX,yuzu-soft.com,节点组-🇯🇵日本
+- DOMAIN-SUFFIX,dmm.co.jp,节点组-🇯🇵日本
+- RULE-SET,domain-ai,AI
+- GEOSITE,telegram,Telegram
+- GEOSITE,microsoft@cn,微软服务 - CN
+- GEOSITE,microsoft,微软服务
+- IP-CIDR,160.79.104.0/21,AI,no-resolve
+- IP-CIDR6,2607:6bc0::/32,AI,no-resolve
+- IP-ASN,399358,AI,no-resolve
+- RULE-SET,reject,REJECT
+- GEOSITE,private,DIRECT
+- RULE-SET,domain-proxy,默认代理
+- RULE-SET,domain-direct,DIRECT
+- GEOSITE,gfw,默认代理
+- GEOSITE,geolocation-!cn,默认代理
+- GEOIP,private,DIRECT,no-resolve
+- GEOIP,telegram,Telegram
+- GEOIP,LAN,DIRECT
+- GEOIP,CN,DIRECT
+- MATCH,漏网之鱼
