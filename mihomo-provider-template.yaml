@@ -140,12 +140,26 @@ dns:
   - https://dns.alidns.com/dns-query
   - https://d.atri.ink/dns-query
   proxy-server-nameserver-policy:
+    # provider 仅导入节点，不合并原订阅 DNS。以下按机场域名隔离，2026-10-10 核对。
+    # 同组专用 DNS 并发查询；不混入公共 DNS，避免返回不同入口。
     +.ctcxianyu.com:
     - https://38.76.213.238:8080/dns-query
-    - https://sublol.iotechn.com:10086/dns-query
+    - https://149.104.6.147:8080/dns-query
     +.525536.xyz:
     - https://38.76.213.238:8080/dns-query
-    - https://sublol.iotechn.com:10086/dns-query
+    - https://149.104.6.147:8080/dns-query
+    planb.mojcn.com.linuxlh.xin:
+    - https://api.edgequery.cc:40443/dns-query
+    m.cnmjin.net:
+    - https://47.107.191.224:8443/dns-query
+    +.sh-cloudflare.sbs:
+    - https://dns01.shanhai.you:16666/dns-query
+    - https://dns02.shanhai.you:16666/dns-query
+    - https://dns03.shanhai.you:16666/dns-query
+    +.kunlun05dns.com:
+    - https://20.247.42.211:36290/dns-query/clash?site=paopaogou
+    - https://20.239.241.138:55228/dns-query/clash?site=paopaogou
+    - https://104.208.122.199:62201/dns-query/clash?site=paopaogou
   nameserver-policy:
     geosite:gfw:
     - https://cloudflare-dns.com/dns-query#默认代理
@@ -164,7 +178,6 @@ dns:
   fallback:
   - https://cloudflare-dns.com/dns-query#默认代理
   - https://d.atri.ink/dns-query
-  - https://38.76.213.238:8080/dns-query
 
 # 共用配置：YAML 锚点仅用于复用，不执行脚本。
 x-select: &select
@@ -187,7 +200,8 @@ proxy-groups:
   - name: '默认代理'
     <<: *select
     proxies:
-    - 自动选择
+    - 自动选择-按月
+    - 自动选择-定量
     - 负载均衡-轮询
     - 负载均衡-一致性哈希
     - DIRECT
@@ -225,7 +239,8 @@ proxy-groups:
     proxies:
     - 默认代理
     - DIRECT
-    - 自动选择
+    - 自动选择-按月
+    - 自动选择-定量
     - 负载均衡-轮询
     - 负载均衡-一致性哈希
     - 节点组-🇺🇸美国
@@ -247,7 +262,8 @@ proxy-groups:
     proxies:
     - 默认代理
     - DIRECT
-    - 自动选择
+    - 自动选择-按月
+    - 自动选择-定量
     - 负载均衡-轮询
     - 负载均衡-一致性哈希
     - 节点组-🇺🇸美国
@@ -269,7 +285,8 @@ proxy-groups:
     proxies:
     - 默认代理
     - DIRECT
-    - 自动选择
+    - 自动选择-按月
+    - 自动选择-定量
     - 负载均衡-轮询
     - 负载均衡-一致性哈希
     - 节点组-🇺🇸美国
@@ -291,7 +308,8 @@ proxy-groups:
     proxies:
     - 默认代理
     - DIRECT
-    - 自动选择
+    - 自动选择-按月
+    - 自动选择-定量
     - 负载均衡-轮询
     - 负载均衡-一致性哈希
     - 节点组-🇺🇸美国
@@ -313,7 +331,8 @@ proxy-groups:
     proxies:
     - 默认代理
     - DIRECT
-    - 自动选择
+    - 自动选择-按月
+    - 自动选择-定量
     - 负载均衡-轮询
     - 负载均衡-一致性哈希
     - 节点组-🇺🇸美国
@@ -329,12 +348,6 @@ proxy-groups:
     - 节点组-🇨🇦加拿大
     - 节点组-🌐其他地区
 
-  - name: '自动选择'
-    type: select
-    proxies:
-    - 自动选择-按月
-    - 自动选择-定量
-
   - name: '负载均衡-轮询'
     type: select
     proxies:
@@ -348,18 +361,12 @@ proxy-groups:
     - 负载均衡-一致性哈希-定量
 
   - name: '自动选择-AI'
-    type: select
-    proxies:
-    - 自动选择-AI-按月
-    - 自动选择-AI-定量
+    <<: *auto
+    filter: (?i)^\[(?:按月|定量)・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
 
   - name: '自动选择-按月'
     <<: *auto
     filter: (?i)^\[按月・[^\]]+\] .*
-
-  - name: '自动选择-AI-按月'
-    <<: *auto
-    filter: (?i)^\[按月・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
 
   - name: '负载均衡-轮询-按月'
     <<: *auto
@@ -376,10 +383,6 @@ proxy-groups:
   - name: '自动选择-定量'
     <<: *auto
     filter: (?i)^\[定量・[^\]]+\] .*
-
-  - name: '自动选择-AI-定量'
-    <<: *auto
-    filter: (?i)^\[定量・[^\]]+\] .*(?:美国|美國|States|United States|🇺🇸|(?<![A-Za-z])US(?![A-Za-z])|台湾|台灣|Taiwan|Taipei|🇹🇼|(?<![A-Za-z])TW(?![A-Za-z])|日本|Japan|Tokyo|🇯🇵|(?<![A-Za-z])JP(?![A-Za-z])|新加坡|Singapore|🇸🇬|(?<![A-Za-z])SG(?![A-Za-z])|韩国|韓國|Korea|Seoul|🇰🇷|(?<![A-Za-z])KR(?![A-Za-z])|英国|英國|Kingdom|Britain|🇬🇧|(?<![A-Za-z])(?:UK|GB)(?![A-Za-z])|法国|法國|France|Paris|🇫🇷|(?<![A-Za-z])FR(?![A-Za-z])|德国|德國|Germany|Frankfurt|🇩🇪|(?<![A-Za-z])DE(?![A-Za-z]))
 
   - name: '负载均衡-轮询-定量'
     <<: *auto
